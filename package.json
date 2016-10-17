@@ -1,0 +1,29 @@
+{
+  "name": "bamazon-node_mysql",
+  "version": "1.0.0",
+  "description": "This Node.js terminal app is an Amazon-like storefront where users can buy items from the store's inventory. This app uses Javascript, Node.js and MySq",
+  "main": "BamazonCustomer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nfinley/Bamazon-Node_MySql.git"
+  },
+  "keywords": [
+    "node.js",
+    "mysql"
+  ],
+  "author": "Nigel Finley",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Nfinley/Bamazon-Node_MySql/issues"
+  },
+  "homepage": "https://github.com/Nfinley/Bamazon-Node_MySql#readme",
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "cli-table": "^0.3.1",
+    "inquirer": "^1.2.2",
+    "mysql2-promise": "^0.1.4"
+  }
+}
