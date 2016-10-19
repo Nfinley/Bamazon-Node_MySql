@@ -23,6 +23,7 @@
   "dependencies": {
     "bluebird": "^3.4.6",
     "cli-table": "^0.3.1",
+    "colors": "^1.1.2",
     "inquirer": "^1.2.2",
     "mysql2-promise": "^0.1.4"
   }
