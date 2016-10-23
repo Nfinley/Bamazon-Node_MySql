@@ -31,5 +31,5 @@ VALUES ('Trumpet', 'Instruments', 300.00, 500),
 USE bamazon;
 SELECT * FROM products;
 
-set sql_safe_updates =0;
-UPDATE products SET stockQuantity = 0 WHERE productName = 'Trumpet';
+-- set sql_safe_updates =0;
+-- UPDATE products SET stockQuantity = 0 WHERE productName = 'Trumpet';ls

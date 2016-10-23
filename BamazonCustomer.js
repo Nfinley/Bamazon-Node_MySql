@@ -1,5 +1,7 @@
-// Author: Nigel Finley. A Nope and mySql app created as a part of the UT Coding Bootcamp
+// Author: Nigel Finley. A Node and mySql app created as a part of the UT Coding Bootcamp
 
+// I realuzed when I was finished that the way I constructed this is with nested function after nested function and is not a good way to organize code. My goal is to go back
+// and clean this code up so the functions are not as nested and do not rely on each other.  
 
 var fs = require('fs');
 
@@ -132,7 +134,8 @@ function printReceipt(totalPrice, productName, quantity, id, newQuant){
     	// console.log("in here")
     	// If user selects Y then they checkout and run the updateB function
     	if(answers.receipt.toUpperCase() == 'Y'){
-    		console.log("You have successfully purchased: ".blue + quantity + " " + productName + "(s) for " + "$".green + totalPrice);
+    		console.log("\nYou have successfully purchased:\n".green + "================================".blue); 
+    		console.log(quantity + " " + productName + "(s) for " + "$".green + totalPrice+ "\n================================\n".blue);
     		 return updateDB(id, newQuant);
 
     	} else {
@@ -180,7 +183,7 @@ function isLetter(input){
 
 //=== RUN BAMAZON =======
 showProducts();
-// updateDB(7, 140);
+
 
 
 

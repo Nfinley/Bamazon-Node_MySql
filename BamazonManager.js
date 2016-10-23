@@ -1,5 +1,5 @@
-// Insert
-// * Create a new Node application called `BamazonManager.js`. Running this application will:
+// Bamazon Manager JS File. Author: Nigel Finley. UT BOOTCAMP OCT 2016
+// This file is the logic for displaying and adding products into database
 
 // 	* List a set of menu options: 
 // 		* View Products for Sale 
@@ -7,16 +7,16 @@
 // 		* Add to Inventory
 // 		* Add New Product
 
-// 	* If a manager selects `View Products for Sale`, the app should list every available item: the item IDs, names, prices, and quantities.
+// 	* When manager selects `View Products for Sale`, the app should list every available item: the item IDs, names, prices, and quantities.
 
-// 	* If a manager selects `View Low Inventory`, then it should list all items with a inventory count lower than five. query DB and  only display items that are less then five
+// 	* When manager selects `View Low Inventory`, then it should list all items with a inventory count lower than five. query DB and  only display items that are less then five
 
-// 	* If a manager selects `Add to Inventory`, your app should display a prompt that will let the manager "add more" of any item currently in the store.  
+// 	* When manager selects `Add to Inventory`, your app should display a prompt that will let the manager "add more" of any item currently in the store.  
 // 	select the ID in which you want to UPDATE, type in the quantity you want to add
 
-// 	* If a manager selects `Add New Product`, it should allow the manager to add a completely new product to the store. INSERT INTO  products
-// 	
-// 	var fs = require('fs');
+// 	* When manager selects `Add New Product`, it should allow the manager to add a completely new product to the store. INSERT INTO  products
+
+// 	TODO: ADD Console logs for succesful additions of inventory and additions of additional products
 
 // ======= NPM MODULES ==========
 var bluebird = require('bluebird');
@@ -24,7 +24,6 @@ var Table = require('cli-table');
 var db = require('mysql2-promise')();
 var inquirer = require('inquirer');
 var colors = require('colors');
-var prodIdArray =[];
 var currentQuant;
 
 db.configure({
@@ -48,31 +47,49 @@ function showList(){
     });
 }
 
+// function printBanner(answers){
+// 	if(answers.home){
+
+// 	}
+// }
+// call two different functions with the product, and set the result
 // This function handles the users response to the list of questions
    function handleListResponse(answers){
 		switch (answers.home){
 			case 'View Products For Sale':
+				process.stdout.write('\033c');
 			    console.log("\nProducts for sale!\n".bold.magenta);
 				// This calls the function that queries the database
 		        return getProducts()
 		          // this is a promise that is called once the function get products is finshed and displayes the products in the screen
-		          	.then(showProducts);
+		          	.then(showProducts)
+		          	.then(showList)
+					.then(handleListResponse);
 				break;
 			case 'View Low Inventory':
+				process.stdout.write('\033c');
 		        console.log("\nLow Inventory\n".bold.magenta);
 				// This calls the function that queries the database
 		        return getLowInventory()
 		          // this is a promise that is called once the function getLowInventory is finshed and displayes the products in the screen
-		          	.then(showProducts);
+		          	.then(showProducts)
+		          	.then(showList)
+					.then(handleListResponse);
 				break;
 			case 'Add To Inventory':
-		        console.log("\nADD\n".bold.magenta);
+				process.stdout.write('\033c');
+		        console.log("\nADD To Current Inventory\n".bold.magenta);
 				// getProducts()
 
-				addInventory()	
-					.then(updateDBInventory)
-		          	.then(getProducts)
-		          	.then(showProducts);
+				getProducts()
+				.then(function(products) {
+					showProducts(products);
+					var productList = addProductsToArray(products);
+					return addInventory(productList);
+				})
+				.then(updateDBInventory)
+				.then(showList)
+				.then(handleListResponse);
 			// 	select the ID in which you want to UPDATE, type in the quantity you want to add
 			// run inquirer ask for the id and quantity
 			// then create a separate functoin to handle add quantity to query the DB - update function 
@@ -82,7 +99,9 @@ function showList(){
 			case 'Add Product':
 			// run inquirer to have the user input the name, the price, the department and quantity
 				userAddProduct()
-					.then(addNewProduct);
+					.then(addNewProduct)
+					.then(showList)
+					.then(handleListResponse);
 				break;
 			case 'Exit':
             	console.log("THANKS FOR DROPPING BY. GOOD BYE!".magenta);
@@ -96,6 +115,9 @@ function showList(){
 // function that queries the db and gets the product data
 function getProducts() {
 	return db.query("SELECT * FROM products")
+		.then(function(rows) {
+			return rows[0];
+		})
 	    .catch(function(err) {
 	        console.log(err);
 	    });
@@ -108,31 +130,40 @@ function showProducts(rows) {
                 head: ['ID', 'Product Name', 'Price', 'Quantity'],
                 colWidths: [7, 25, 10, 10]
             });
-            rows[0].forEach(function(value, index) {
+            rows.forEach(function(value, index) {
                 table.push([value.itemID, value.productName, value.price, value.stockQuantity]);
-                prodIdArray.push(value.itemID.toString());
 
                 // console.log(row.itemID, row.productName, row.price);
             });
             console.log(table.toString());
             // console.log("ID ARRAY: "  + prodIdArray);
+            
+}
+
+function addProductsToArray(products) {
+	return products.map(function(product) {
+            return product.itemID.toString();
+	})
 }
 // This function queries the database and pulls only data with quantity less than 50
 function getLowInventory(){
 	return db.query("SELECT * FROM products WHERE stockQuantity < 50")
+		.then(function(rows) {
+				return rows[0];
+			})
 	    .catch(function(err) {
 	        console.log(err);
 	    });
 }
 
 // this function will ask 
-function addInventory(){
-	console.log(prodIdArray);
+function addInventory(productList){
+	// console.log(productList);
 	return inquirer.prompt([{
         name: "id",
         message: "Please enter the ID of the product you would like to replenish",
         type: "list",
-        choices: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10',]
+        choices: productList
     },{
         name: "units",
         message: "How many units would you like to add to the current quantity?",
@@ -148,14 +179,14 @@ function addInventory(){
 
 function userAddProduct(){
 	return inquirer.prompt([{
-        name: "name",
-        message: "Please enter the name of your new product",
-        type: "input",
-    },{
-    	name: "dept",
+		name: "dept",
         message: "Please enter the department of your new product",
         type: "list",
-        choices: ['Instruments', 'Books', 'Accessories']
+        choices: ['Instruments', 'Books', 'Accessories'] 
+    },{
+    	name: "name",
+        message: "Please enter the name of your new product",
+        type: "input",
     },{
         name: "price",
         message: "How much will this product cost? (Enter format: 300)",
@@ -180,8 +211,10 @@ function addNewProduct(answers){
 	var dept = answers.dept.trim();
 	var price = parseFloat(answers.price);
 	var quantity = parseInt(answers.quantity);
-	console.log(typeof price);
-	console.log(name, dept, price, quantity);
+	console.log("\nYour product has been successfully created in the database!".green);
+	console.log("Select View Products For Sale to see the update\n".green);		
+
+
 	return db.query("INSERT INTO products SET ?", {
 		productName: name,
 		departmentName: dept,
@@ -193,10 +226,6 @@ function addNewProduct(answers){
 	    });
 
 }
- // connection.query("INSERT INTO artists SET ?", {
- // 	artist: 'katy perry',
- // 	title: 'firework',
- // 	genre: 'pop' 
 
 // this function will use the inventory quantity and then update the database
 function updateDBInventory(answers){
@@ -204,15 +233,17 @@ function updateDBInventory(answers){
 	// NEED TO GET THE current quantity of the ID sselected, not sure how to pull this information in. 
 	
 	var quantity = answers.units
-	
-	return db.query("UPDATE products SET ? WHERE ?", [{stockQuantity: quantity}, {itemID: id}])
+	console.log("\nYour product has been successfully updated in the database!".green);
+	console.log("Select View Products For Sale to see the update\n".green);	
+	return db.query("UPDATE products SET stockQuantity = stockQuantity + " + quantity + " WHERE itemID =" + id)
 		// .then(function(rows){
-			
+
 		// 	return getProducts(showProducts);
 		// })
 	    .catch(function(err) {
 	        console.log(err);
 	    });
+	    
 
 }
 
@@ -230,5 +261,4 @@ process.stdout.write('\033c');
 console.log("\nWelcome to the Bamazon Manager Portal!\n".green);
 showList()
     .then(handleListResponse)
-    // .then(showList)
     // .then(userInput)
