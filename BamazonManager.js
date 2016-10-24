@@ -7,16 +7,11 @@
 // 		* Add to Inventory
 // 		* Add New Product
 
-// 	* When manager selects `View Products for Sale`, the app should list every available item: the item IDs, names, prices, and quantities.
+// 	* When manager selects `View Products for Sale`, it will list every available item: the item IDs, names, prices, and quantities.
+// 	* When manager selects `View Low Inventory`, it will list all items with a inventory count lower than five. query DB and  only display items that are less then five
+// 	* When manager selects `Add to Inventory`, it will display a prompt that will let the manager "add more" of any item currently in the store.  
+// 	* When manager selects `Add New Product`, it will allow the manager to add a completely new product to the store. 
 
-// 	* When manager selects `View Low Inventory`, then it should list all items with a inventory count lower than five. query DB and  only display items that are less then five
-
-// 	* When manager selects `Add to Inventory`, your app should display a prompt that will let the manager "add more" of any item currently in the store.  
-// 	select the ID in which you want to UPDATE, type in the quantity you want to add
-
-// 	* When manager selects `Add New Product`, it should allow the manager to add a completely new product to the store. INSERT INTO  products
-
-// 	TODO: ADD Console logs for succesful additions of inventory and additions of additional products
 
 // ======= NPM MODULES ==========
 var bluebird = require('bluebird');
@@ -207,6 +202,20 @@ function userAddProduct(){
 }
 // this function adds a new product into the database
 function addNewProduct(answers){
+	var deptID;
+	switch(answers.dept){
+		case 'Instruments':
+		deptID = 1;
+		break;
+
+		case 'Books':
+		deptID = 2;
+		break;
+
+		case 'Accessories':
+		deptID = 3;
+		break;
+	}
 	var name = answers.name.trim();
 	var dept = answers.dept.trim();
 	var price = parseFloat(answers.price);
@@ -219,7 +228,8 @@ function addNewProduct(answers){
 		productName: name,
 		departmentName: dept,
 		price: price, 
-		stockQuantity: quantity
+		stockQuantity: quantity,
+		departmentID: deptID
 	})
 	    .catch(function(err) {
 	        console.log(err);

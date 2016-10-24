@@ -11,7 +11,7 @@ var Table = require('cli-table');
 var db = require('mysql2-promise')();
 var inquirer = require('inquirer');
 var colors = require('colors');
-var prodIdArray =[];
+var prodIdArray = [];
 
 db.configure({
     "host": "localhost",
@@ -28,8 +28,8 @@ function showProducts() {
             // instantiate 
             process.stdout.write('\033c');
             console.log("Welcome to Bamazon!".bold.magenta);
-            
-            
+
+
             var table = new Table({
                 head: ['ID', 'Product Name', 'Price'],
                 colWidths: [7, 25, 10]
@@ -99,92 +99,98 @@ function questions() {
 function searchDB(id, quantity) {
     return db.query("SELECT * FROM products WHERE ?", [{ itemID: id }])
         .spread(function(rows) {
-            
-            	// scenario where are no products with that ID left 
-                if (parseInt(rows[0].stockQuantity) < 1){
-                    console.log("\nI am sorry but this item is no longer in stock\n".rainbow);
-                    return questions();
 
-                 // scenario where the amount they entered is greater than the stock available    
-                } else if (parseInt(rows[0].stockQuantity) < parseInt(quantity)){
-                    console.log("\nI am sorry but we do not have enough items to fulfil your request\n".red);
-                    return questions();
+            // scenario where are no products with that ID left 
+            if (parseInt(rows[0].stockQuantity) < 1) {
+                console.log("\nI am sorry but this item is no longer in stock\n".rainbow);
+                return questions();
+
+                // scenario where the amount they entered is greater than the stock available    
+            } else if (parseInt(rows[0].stockQuantity) < parseInt(quantity)) {
+                console.log("\nI am sorry but we do not have enough items to fulfil your request\n".red);
+                return questions();
 
                 // If the store has enough product we need to fulfil the customers order and this will handle
-		       } else {
-		       		var totalPrice = parseInt(quantity) * parseInt(rows[0].price);
-		           	var newQuant = parseInt(rows[0].stockQuantity) - parseInt(quantity);
-		           	// using this to send the data to the pringt receipt function
-		           	return printReceipt(totalPrice, rows[0].productName, parseInt(quantity), id, newQuant);
+            } else {
+                var totalPrice = parseInt(quantity) * parseInt(rows[0].price);
+                var newQuant = parseInt(rows[0].stockQuantity) - parseInt(quantity);
+                var deptID = rows[0].departmentID;
+                console.log("This is dept ID: " + deptID, totalPrice);
+                // pushes the new total sales number by department to the departments table in the DB
+                updateTotalSales(totalPrice, deptID)
+                // using this to send the data to the print receipt function
+                	.then(printReceipt(totalPrice, rows[0].productName, parseInt(quantity), id, newQuant));
 
-
-		       }
+            }
 
         })
 
 }
 // This function tells the user how much their total is and asks if they want to proceed. If they do it displays what they bought
-function printReceipt(totalPrice, productName, quantity, id, newQuant){
-	inquirer.prompt([{
+function printReceipt(totalPrice, productName, quantity, id, newQuant) {
+    console.log("in printReceipt");
+    inquirer.prompt([{
         name: "receipt",
-        message: "Your total today is: "+ "$".green +totalPrice +" Would you like to proceed (Y/N)".red,
+        message: "Your total today is: " + "$".green + totalPrice + " Would you like to proceed (Y/N)".red,
         type: "input",
         validate: isLetter
     }]).then(function(answers) {
-    	// console.log("in here")
-    	// If user selects Y then they checkout and run the updateB function
-    	if(answers.receipt.toUpperCase() == 'Y'){
-    		console.log("\nYou have successfully purchased:\n".green + "================================".blue); 
-    		console.log(quantity + " " + productName + "(s) for " + "$".green + totalPrice+ "\n================================\n".blue);
-    		 return updateDB(id, newQuant);
+        // console.log("in here")
+        // If user selects Y then they checkout and run the updateB function
+        if (answers.receipt.toUpperCase() == 'Y') {
+            console.log("\nYou have successfully purchased:\n".green + "================================".blue);
+            console.log(quantity + " " + productName + "(s) for " + "$".green + totalPrice + "\n================================\n".blue);
+            return updateDB(id, newQuant);
 
-    	} else {
-    		// send the user back to the beginning
-    		return startShopping();
-    	}
+        } else {
+            // send the user back to the beginning
+            return startShopping();
+        }
 
-       
+
     });
 
 
 }
 
+function updateTotalSales(totalPrice, deptID) {
+    console.log(totalPrice, deptID);
+    return db.query("UPDATE departments SET totalSales = totalSales + " + totalPrice + " WHERE departmentID =" + deptID)
+        .catch(function(err) {
+            console.log(err);
+        });
+}
 // this function will update the database to reflect the new quantity within the database based on what the user wanted to buy
 function updateDB(id, newQuant) {
-	  return db.query("UPDATE products SET ? WHERE ?", [{stockQuantity: newQuant}, { itemID: id }])
+    return db.query("UPDATE products SET ? WHERE ?", [{ stockQuantity: newQuant }, { itemID: id }])
         .spread(function(rows) {
-        	// console.log("Our inventory has been updated");
-        	return startShopping();
+            // console.log("Our inventory has been updated");
+            return startShopping();
 
-		}).catch(function(err){
-		console.log(err);
-	});
+        }).catch(function(err) {
+            console.log(err);
+        });
 }
 
 
 
 // This function checks to see if the user input is a number or not
-function isNumber(input){
-	if (input.match(/[0-9]+/)) {
-                return true;
-            } else {
-                return false;
-            }
+function isNumber(input) {
+    if (input.match(/[0-9]+/)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 // function to check to see if user input is Y or N all else are rejected
-function isLetter(input){
-            if (input === 'Y' || input === 'y' || input === 'n' || input === 'N') {
-                return true;
-            } else {
-                return false;
-            }
+function isLetter(input) {
+    if (input === 'Y' || input === 'y' || input === 'n' || input === 'N') {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 //=== RUN BAMAZON =======
 showProducts();
-
-
-
-
-

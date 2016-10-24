@@ -9,7 +9,7 @@ USE bamazon;
 CREATE TABLE products (
 itemID INT NOT NULL AUTO_INCREMENT,
 productName VARCHAR(45), 
-departmentName VARCHAR(45),
+departmentID VARCHAR(45),
 price DECIMAL(7,2), 
 stockQuantity INTEGER (10),
 PRIMARY KEY(itemID)
@@ -30,6 +30,7 @@ VALUES ('Trumpet', 'Instruments', 300.00, 500),
 
 USE bamazon;
 SELECT * FROM products;
-
+-- 
 -- set sql_safe_updates =0;
--- UPDATE products SET stockQuantity = 0 WHERE productName = 'Trumpet';ls
+-- UPDATE products SET departmentID = 3 WHERE departmentName = 'Accessories';
+
